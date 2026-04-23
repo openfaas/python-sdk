@@ -104,45 +104,14 @@ def _fn_cache_key(name: str, namespace: str) -> str:
     return f"{name}.{namespace}"
 
 
-def _parse_function_name_namespace(path: str) -> tuple[str, str]:
-    """Extract ``(name, namespace)`` from a function invocation URL path.
+class _BearerAuth(requests.auth.AuthBase):
+    """Sets a static Bearer token on the Authorization header."""
 
-    Handles both ``/function/name.namespace`` and
-    ``/async-function/name.namespace`` path formats.
-
-    Raises:
-        ValueError: If the path does not match the expected format.
-    """
-    parts = path.lstrip("/").split("/", 1)
-    if len(parts) != 2 or parts[0] not in ("function", "async-function"):
-        raise ValueError(f"Cannot parse function name/namespace from path: {path!r}")
-    slug = parts[1]
-    if "." not in slug:
-        raise ValueError(
-            f"Function path {slug!r} does not contain a namespace — "
-            "expected format: /function/<name>.<namespace>"
-        )
-    name, _, namespace = slug.partition(".")
-    return name, namespace
-
-
-class _FunctionAuth(requests.auth.AuthBase):
-    """Compound auth: applies gateway auth then overrides Authorization with a
-    per-function Bearer token.
-
-    The gateway auth (e.g. BasicAuth) may already set ``Authorization`` for the
-    gateway itself.  For function invocations the function-scoped JWT must take
-    precedence so the gateway can forward it to the function.
-    """
-
-    def __init__(self, gateway_auth: requests.auth.AuthBase | None, fn_token: str) -> None:
-        self._gateway_auth = gateway_auth
-        self._fn_token = fn_token
+    def __init__(self, token: str) -> None:
+        self._token = token
 
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        if self._gateway_auth is not None:
-            r = self._gateway_auth(r)
-        r.headers["Authorization"] = f"Bearer {self._fn_token}"
+        r.headers["Authorization"] = f"Bearer {self._token}"
         return r
 
 
@@ -479,9 +448,9 @@ class Client:
 
         if use_function_auth:
             fn_token = self.get_function_token(name, namespace)
-            auth: requests.auth.AuthBase | None = _FunctionAuth(self._auth, fn_token)
+            auth: requests.auth.AuthBase | None = _BearerAuth(fn_token)
         else:
-            auth = self._auth
+            auth = None
 
         try:
             return self._http.request(
