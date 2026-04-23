@@ -11,7 +11,6 @@ import requests
 import requests_mock as req_mock
 
 from openfaas import BasicAuth, Client
-from openfaas.client import _parse_function_name_namespace
 from openfaas.exceptions import ForbiddenError, NotFoundError, UnauthorizedError
 from openfaas.models import FunctionDeployment, FunctionNamespace, Secret
 
@@ -245,36 +244,6 @@ class TestClientSync:
 
 
 # ---------------------------------------------------------------------------
-# _parse_function_name_namespace
-# ---------------------------------------------------------------------------
-
-
-class TestParseFunctionNameNamespace:
-    def test_function_path(self) -> None:
-        name, ns = _parse_function_name_namespace("/function/hello.openfaas-fn")
-        assert name == "hello"
-        assert ns == "openfaas-fn"
-
-    def test_async_function_path(self) -> None:
-        name, ns = _parse_function_name_namespace("/async-function/hello.openfaas-fn")
-        assert name == "hello"
-        assert ns == "openfaas-fn"
-
-    def test_name_with_dots(self) -> None:
-        # Only the first dot separates name from namespace
-        name, ns = _parse_function_name_namespace("/function/my.func.openfaas-fn")
-        assert name == "my"
-        assert ns == "func.openfaas-fn"
-
-    def test_invalid_prefix_raises(self) -> None:
-        with pytest.raises(ValueError, match="Cannot parse"):
-            _parse_function_name_namespace("/system/functions")
-
-    def test_missing_namespace_raises(self) -> None:
-        with pytest.raises(ValueError, match="does not contain a namespace"):
-            _parse_function_name_namespace("/function/hello")
-
-
 # ---------------------------------------------------------------------------
 # invoke_function
 # ---------------------------------------------------------------------------
