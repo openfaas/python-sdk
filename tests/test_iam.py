@@ -317,6 +317,36 @@ class TestClientCredentialsTokenSource:
         assert "app" in r
         assert "topsecret" not in r
 
+    def test_custom_session_is_used(self) -> None:
+        with req_mock.Mocker() as m:
+            m.post(_IDP_TOKEN_URL, json={"access_token": "cc-token", "expires_in": 3600})
+            session = requests.Session()
+            src = ClientCredentialsTokenSource(
+                client_id="app",
+                client_secret="secret",
+                token_url=_IDP_TOKEN_URL,
+                http_client=session,
+            )
+            assert src.token() == "cc-token"
+            # session should not be closed by the source
+            assert session.get  # still usable
+
+    def test_custom_session_is_not_closed(self) -> None:
+        with req_mock.Mocker() as m:
+            m.post(_IDP_TOKEN_URL, json={"access_token": "cc-token", "expires_in": 3600})
+            session = requests.Session()
+            src = ClientCredentialsTokenSource(
+                client_id="app",
+                client_secret="secret",
+                token_url=_IDP_TOKEN_URL,
+                http_client=session,
+            )
+            src.token()
+            # calling token() again should still work (session not closed)
+            m.post(_IDP_TOKEN_URL, json={"access_token": "cc-token2", "expires_in": 1})
+            src._token = None
+            assert src.token() == "cc-token2"
+
 
 # ---------------------------------------------------------------------------
 # TokenAuth
