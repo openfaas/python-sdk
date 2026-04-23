@@ -238,6 +238,9 @@ class ClientCredentialsTokenSource:
         scope: str = "",
         grant_type: str = "client_credentials",
         audience: str = "",
+        *,
+        timeout: float = 30.0,
+        http_client: requests.Session | None = None,
     ) -> None:
         self._client_id = client_id
         self._client_secret = client_secret
@@ -245,6 +248,8 @@ class ClientCredentialsTokenSource:
         self._scope = scope
         self._grant_type = grant_type
         self._audience = audience
+        self._timeout = timeout
+        self._http_client = http_client
         self._token: Token | None = None
         self._lock = threading.Lock()
 
@@ -268,8 +273,15 @@ class ClientCredentialsTokenSource:
             return self._token.id_token
 
     def _fetch(self) -> Token:
-        with requests.Session() as session:
-            response = session.post(self._token_url, data=self._build_data())
+        _owns_session = self._http_client is None
+        session = self._http_client or requests.Session()
+        try:
+            response = session.post(
+                self._token_url, data=self._build_data(), timeout=self._timeout
+            )
+        finally:
+            if _owns_session:
+                session.close()
         if not response.ok:
             raise RuntimeError(
                 f"Failed to obtain client credentials token: "

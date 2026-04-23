@@ -39,6 +39,7 @@ def exchange_id_token(
     *,
     audience: list[str] | None = None,
     scope: list[str] | None = None,
+    timeout: float = 30.0,
     http_client: requests.Session | None = None,
 ) -> Token:
     """Exchange an upstream identity token for an OpenFaaS gateway token.
@@ -57,6 +58,7 @@ def exchange_id_token(
                       ``["function"]``.
         http_client:  Optional :class:`requests.Session` to use for the
                       request.  Defaults to a short-lived throwaway session.
+        timeout:      Request timeout in seconds.  Defaults to ``30.0``.
 
     Returns:
         A :class:`~openfaas.token.Token` containing the OpenFaaS JWT.
@@ -90,7 +92,7 @@ def exchange_id_token(
     session = http_client or requests.Session()
 
     try:
-        response = session.post(token_url, data=data, headers=headers)
+        response = session.post(token_url, data=data, headers=headers, timeout=timeout)
 
         if _is_debug():
             logger.debug("← %s %s", response.status_code, token_url)
