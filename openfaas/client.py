@@ -510,6 +510,7 @@ class Client:
             id_token,
             scope=["function"],
             audience=[f"{namespace}:{name}"],
+            http_client=self._http,
         )
 
         if self._token_cache is not None:
