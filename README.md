@@ -4,14 +4,11 @@ The official Python SDK for [OpenFaaS](https://www.openfaas.com).
 
 ## Features
 
-- Full coverage of the OpenFaaS REST API — functions, namespaces, secrets, logs, system info, and function invocation
-- Synchronous `Client` backed by `requests`
-- Multiple auth strategies: Basic auth, OpenFaaS IAM (token exchange), OAuth2 client credentials
-- Pydantic v2 models for all request and response types — validated, typed, IDE-friendly
-- Streaming log support via iterators
-- `FunctionBuilder` client for the [OpenFaaS Pro Function Builder API](https://docs.openfaas.com/openfaas-pro/builder/) — build and push function images from source
-- `FAAS_DEBUG=1` environment variable for request/response logging (auth headers redacted)
-- Context manager support for automatic connection cleanup
+- Manage functions, namespaces, and secrets
+- Invoke functions synchronously or asynchronously
+- Stream function logs
+- Basic auth and [OpenFaaS IAM](https://docs.openfaas.com/openfaas-pro/iam/overview/) support
+- Build and push function images from source via the [Function Builder API](https://docs.openfaas.com/openfaas-pro/builder/)
 
 ## Requirements
 
@@ -72,20 +69,26 @@ with open("/var/secrets/basic-auth-password") as f:
 auth = BasicAuth(username="admin", password=password)
 ```
 
-### Custom auth
+### OpenFaaS IAM — external IdP via client credentials
 
-Subclass `requests.auth.AuthBase` directly to implement your own strategy:
+For workloads outside Kubernetes, use `ClientCredentialsTokenSource` to obtain tokens from an external IdP and exchange them for an OpenFaaS gateway JWT:
 
 ```python
-import requests.auth
+from openfaas_sdk import Client, TokenAuth, ClientCredentialsTokenSource
 
-class MyTokenAuth(requests.auth.AuthBase):
-    def __init__(self, token: str) -> None:
-        self._token = token
+ts = ClientCredentialsTokenSource(
+    client_id="my-app",
+    client_secret="secret",
+    token_url="https://idp.example.com/realms/master/protocol/openid-connect/token",
+    scope="openid",
+)
+auth = TokenAuth(
+    token_url="https://gateway.example.com/oauth/token",
+    token_source=ts,
+)
 
-    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        r.headers["Authorization"] = f"Bearer {self._token}"
-        return r
+with Client("https://gateway.example.com", auth=auth) as client:
+    functions = client.get_functions("openfaas-fn")
 ```
 
 ### OpenFaaS IAM — Kubernetes workload identity
@@ -109,28 +112,6 @@ with Client("https://gateway.example.com", auth=auth) as client:
 `TokenAuth` caches the exchanged gateway token and refreshes it automatically when it expires (10-second expiry buffer).
 
 `TokenAuth` also implements the `TokenSource` protocol, so it is automatically used as the `function_token_source` for per-function scoped token exchange when calling `get_function_token()`.
-
-### OpenFaaS IAM — external IdP via client credentials
-
-For workloads outside Kubernetes, use `ClientCredentialsTokenSource` to obtain tokens from an external IdP and exchange them for an OpenFaaS gateway JWT:
-
-```python
-from openfaas_sdk import Client, TokenAuth, ClientCredentialsTokenSource
-
-ts = ClientCredentialsTokenSource(
-    client_id="my-app",
-    client_secret="secret",
-    token_url="https://idp.example.com/realms/master/protocol/openid-connect/token",
-    scope="openid",
-)
-auth = TokenAuth(
-    token_url="https://gateway.example.com/oauth/token",
-    token_source=ts,
-)
-
-with Client("https://gateway.example.com", auth=auth) as client:
-    functions = client.get_functions("openfaas-fn")
-```
 
 ### Custom token sources
 
@@ -160,7 +141,9 @@ auth = TokenAuth(
 
 ### Per-function scoped tokens
 
-`get_function_token()` exchanges the current identity token for a short-lived token scoped to a specific function (audience `"<namespace>:<function-name>"`). Use this token when invoking functions directly:
+> **Advanced use case.** For most scenarios, use [`invoke_function`](#function-invocation) with `use_function_auth=True`, which handles token exchange automatically. The method below is for cases where you need full control over function invocation outside of the SDK.
+
+`get_function_token()` exchanges the current identity token for a short-lived token scoped to a specific function (audience `"<namespace>:<function-name>"`). Use this token when invoking the function directly without going through the SDK:
 
 ```python
 token = client.get_function_token("my-func", "openfaas-fn")
@@ -201,9 +184,6 @@ client.deploy(spec)
 # Update an existing function
 spec.image = "ghcr.io/openfaas/env:0.2.0"
 client.update(spec)
-
-# Scale a function
-client.scale_function("env", replicas=3, namespace="openfaas-fn")
 
 # Delete a function
 client.delete_function("env", "openfaas-fn")
@@ -274,12 +254,17 @@ for msg in client.get_logs("env", namespace="openfaas-fn", since=since):
 
 ### Function invocation
 
-`invoke_function` returns the raw `requests.Response` from the function.  Non-2xx responses are **not** raised as exceptions — function responses are application-level and the caller decides how to interpret them.
+#### Synchronous invocation
+
+`invoke_function` returns the raw `requests.Response` from the function. Unlike gateway API calls, non-2xx status codes are not raised as exceptions, function responses are application-level and it is up to the caller to interpret them.
 
 ```python
 # POST with a bytes or str payload
 resp = client.invoke_function("env", method="POST", payload=b"hello")
-print(resp.status_code, resp.text)
+if resp.ok:
+    print(resp.text)
+else:
+    print(f"Error: {resp.status_code} - {resp.text}")
 
 # GET with no payload
 resp = client.invoke_function("env", method="GET")
@@ -297,9 +282,9 @@ resp = client.invoke_function(
 )
 ```
 
-### Async (queued) invocation
+#### Asynchronous invocation
 
-`invoke_function_async` queues the invocation via the gateway's `/async-function/` route and returns immediately with a `202 Accepted` response.  The function result is not returned synchronously.
+`invoke_function_async` queues the invocation via the gateway's `/async-function/` route and returns immediately with a `202 Accepted` response. The function result is not returned synchronously.
 
 ```python
 # Async invocation — returns 202 immediately
@@ -313,12 +298,9 @@ client.invoke_function_async(
 )
 ```
 
-#### IAM-scoped function invocation
+#### IAM function authentication
 
-When OpenFaaS IAM is enabled, use `use_function_auth=True` to automatically
-obtain a per-function scoped token and attach it as a Bearer token.  This
-requires the client to be configured with a `TokenAuth` (or any
-`function_token_source`):
+When OpenFaaS IAM is enabled, use `use_function_auth=True` to automatically obtain a per-function scoped token and attach it as a Bearer token. This requires the client to be configured with a `TokenAuth` (or an explicit [`function_token_source`](#using-a-separate-identity-provider-for-function-invocations)):
 
 ```python
 from openfaas_sdk import Client, TokenAuth, ServiceAccountTokenSource
@@ -385,19 +367,15 @@ session.proxies = {"https": "http://proxy.corp.example.com"}
 client = Client("https://gateway.example.com", auth=auth, http_client=session)
 ```
 
-### Debug logging
+### Using a separate identity provider for function invocations
 
-Set `FAAS_DEBUG=1` to log all requests and responses. The `Authorization` header is automatically redacted.
-
-```bash
-FAAS_DEBUG=1 python my_script.py
-```
-
-Configure the log level in your application to see the output:
+When using `use_function_auth=True` on function invocations, the client needs a token source to obtain per-function scoped tokens. If the client is configured with `TokenAuth`, it is used automatically. You can also pass a `TokenAuth` instance explicitly as `function_token_source` to use a different identity provider for function invocations than the one used for gateway API calls:
 
 ```python
-import logging
-logging.basicConfig(level=logging.DEBUG)
+client = Client(
+    "https://gateway.example.com",
+    function_token_source=TokenAuth(...),
+)
 ```
 
 ## Function Builder
