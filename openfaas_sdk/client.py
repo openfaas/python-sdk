@@ -7,7 +7,7 @@ Provides a synchronous client backed by :class:`requests.Session`:
 
 Example — sync with Basic auth::
 
-    from openfaas import Client, BasicAuth
+    from openfaas_sdk import Client, BasicAuth
 
     client = Client(
         gateway_url="https://gateway.example.com",
@@ -17,7 +17,7 @@ Example — sync with Basic auth::
 
 Example — sync with IAM auth (Kubernetes workload)::
 
-    from openfaas import Client, TokenAuth, ServiceAccountTokenSource
+    from openfaas_sdk import Client, TokenAuth, ServiceAccountTokenSource
 
     auth = TokenAuth(
         token_url="https://gateway.example.com/oauth/token",
@@ -35,17 +35,17 @@ from typing import Any
 import requests
 import requests.auth
 
-from openfaas._transport import build_session
-from openfaas.auth import TokenSource
-from openfaas.exceptions import (
+from openfaas_sdk._transport import build_session
+from openfaas_sdk.auth import TokenSource
+from openfaas_sdk.exceptions import (
     APIConnectionError,
     ForbiddenError,
     NotFoundError,
     UnauthorizedError,
     UnexpectedStatusError,
 )
-from openfaas.exchange import exchange_id_token
-from openfaas.models import (
+from openfaas_sdk.exchange import exchange_id_token
+from openfaas_sdk.models import (
     FunctionDeployment,
     FunctionNamespace,
     FunctionStatus,
@@ -53,7 +53,7 @@ from openfaas.models import (
     Secret,
     SystemInfo,
 )
-from openfaas.token_cache import TokenCache
+from openfaas_sdk.token_cache import TokenCache
 
 # Label required by OpenFaaS Pro namespace management, injected on every
 # deploy and update to indicate a namespace can be used by OpenFaaS.

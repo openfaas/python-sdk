@@ -28,8 +28,8 @@ from typing import Protocol, runtime_checkable
 import requests
 import requests.auth
 
-from openfaas.exchange import exchange_id_token
-from openfaas.token import OAuthError, Token, parse_token_response
+from openfaas_sdk.exchange import exchange_id_token
+from openfaas_sdk.token import OAuthError, Token, parse_token_response
 
 logger = logging.getLogger("openfaas")
 
@@ -96,7 +96,7 @@ class TokenAuth(requests.auth.AuthBase):
 
     Example — Kubernetes workload::
 
-        from openfaas import Client, TokenAuth, ServiceAccountTokenSource
+        from openfaas_sdk import Client, TokenAuth, ServiceAccountTokenSource
 
         auth = TokenAuth(
             token_url="https://gateway.example.com/oauth/token",
@@ -106,7 +106,7 @@ class TokenAuth(requests.auth.AuthBase):
 
     Example — external IdP via client credentials::
 
-        from openfaas import Client, TokenAuth, ClientCredentialsTokenSource
+        from openfaas_sdk import Client, TokenAuth, ClientCredentialsTokenSource
 
         ts = ClientCredentialsTokenSource(
             client_id="my-app",
@@ -167,7 +167,7 @@ class ServiceAccountTokenSource:
 
     Example::
 
-        from openfaas import TokenAuth, ServiceAccountTokenSource
+        from openfaas_sdk import TokenAuth, ServiceAccountTokenSource
 
         auth = TokenAuth(
             token_url="https://gateway.example.com/oauth/token",
@@ -206,7 +206,7 @@ class ClientCredentialsTokenSource:
 
     Example::
 
-        from openfaas import TokenAuth, ClientCredentialsTokenSource
+        from openfaas_sdk import TokenAuth, ClientCredentialsTokenSource
 
         ts = ClientCredentialsTokenSource(
             client_id="my-app",

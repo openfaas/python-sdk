@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from openfaas.models import (
+from openfaas_sdk.models import (
     FunctionDeployment,
     FunctionNamespace,
     FunctionResources,

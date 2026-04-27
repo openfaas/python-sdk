@@ -16,7 +16,7 @@ import os
 
 import requests
 
-from openfaas._version import __version__
+from openfaas_sdk._version import __version__
 
 logger = logging.getLogger("openfaas")
 

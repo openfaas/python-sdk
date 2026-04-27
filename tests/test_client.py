@@ -10,9 +10,9 @@ import pytest
 import requests
 import requests_mock as req_mock
 
-from openfaas import BasicAuth, Client
-from openfaas.exceptions import NotFoundError
-from openfaas.models import FunctionDeployment, FunctionNamespace, Secret
+from openfaas_sdk import BasicAuth, Client
+from openfaas_sdk.exceptions import NotFoundError
+from openfaas_sdk.models import FunctionDeployment, FunctionNamespace, Secret
 
 # ---------------------------------------------------------------------------
 # Shared test data
