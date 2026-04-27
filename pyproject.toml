@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/openfaas/python-sdk"
+Homepage = "https://openfaas.com"
 Repository = "https://github.com/openfaas/python-sdk"
 
 [build-system]
