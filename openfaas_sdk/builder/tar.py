@@ -16,7 +16,7 @@ import shutil
 import tarfile
 from pathlib import Path
 
-from openfaas.builder.models import BUILDER_CONFIG_FILE_NAME, BuildConfig
+from openfaas_sdk.builder.models import BUILDER_CONFIG_FILE_NAME, BuildConfig
 
 
 def make_tar(tar_path: str, context: str, build_config: BuildConfig) -> None:

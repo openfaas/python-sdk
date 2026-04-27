@@ -6,7 +6,7 @@ Builder API.
 
 Quickstart::
 
-    from openfaas.builder import FunctionBuilder, BuildConfig, make_tar
+    from openfaas_sdk.builder import FunctionBuilder, BuildConfig, make_tar
 
     config = BuildConfig(
         image="ttl.sh/hello-world:1h",
@@ -26,8 +26,8 @@ Quickstart::
             print(line)
 """
 
-from openfaas.builder.client import FunctionBuilder
-from openfaas.builder.models import (
+from openfaas_sdk.builder.client import FunctionBuilder
+from openfaas_sdk.builder.models import (
     BUILD_FAILED,
     BUILD_IN_PROGRESS,
     BUILD_SUCCESS,
@@ -35,7 +35,7 @@ from openfaas.builder.models import (
     BuildConfig,
     BuildResult,
 )
-from openfaas.builder.tar import create_build_context, make_tar
+from openfaas_sdk.builder.tar import create_build_context, make_tar
 
 __all__ = [
     # Client

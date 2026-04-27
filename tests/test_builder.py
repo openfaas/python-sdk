@@ -24,7 +24,7 @@ import pytest
 import requests
 import requests_mock as req_mock
 
-from openfaas.builder import (
+from openfaas_sdk.builder import (
     BUILD_FAILED,
     BUILD_IN_PROGRESS,
     BUILD_SUCCESS,

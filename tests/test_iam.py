@@ -21,15 +21,15 @@ import pytest
 import requests
 import requests_mock as req_mock
 
-from openfaas.auth import (
+from openfaas_sdk.auth import (
     ClientCredentialsTokenSource,
     ServiceAccountTokenSource,
     TokenAuth,
     TokenSource,
 )
-from openfaas.exchange import exchange_id_token
-from openfaas.token import OAuthError, Token, parse_token_response
-from openfaas.token_cache import MemoryTokenCache
+from openfaas_sdk.exchange import exchange_id_token
+from openfaas_sdk.token import OAuthError, Token, parse_token_response
+from openfaas_sdk.token_cache import MemoryTokenCache
 
 # ---------------------------------------------------------------------------
 # Helpers

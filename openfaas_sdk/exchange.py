@@ -14,7 +14,7 @@ import re
 
 import requests
 
-from openfaas.token import OAuthError, Token, parse_token_response
+from openfaas_sdk.token import OAuthError, Token, parse_token_response
 
 logger = logging.getLogger("openfaas")
 

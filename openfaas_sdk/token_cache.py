@@ -10,7 +10,7 @@ from __future__ import annotations
 import threading
 from abc import ABC, abstractmethod
 
-from openfaas.token import Token
+from openfaas_sdk.token import Token
 
 
 class TokenCache(ABC):

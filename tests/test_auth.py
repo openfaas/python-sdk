@@ -7,7 +7,7 @@ import base64
 import requests
 import requests.auth
 
-from openfaas.auth import BasicAuth
+from openfaas_sdk.auth import BasicAuth
 
 
 def _apply_auth(auth: requests.auth.AuthBase) -> requests.PreparedRequest:

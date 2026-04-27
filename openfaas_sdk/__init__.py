@@ -6,7 +6,7 @@ A Python client for the OpenFaaS gateway API.
 
 Quickstart — Basic auth::
 
-    from openfaas import Client, BasicAuth
+    from openfaas_sdk import Client, BasicAuth
 
     with Client("https://gateway.example.com", auth=BasicAuth("admin", "secret")) as client:
         functions = client.get_functions("openfaas-fn")
@@ -15,7 +15,7 @@ Quickstart — Basic auth::
 
 Quickstart — IAM auth (Kubernetes workload)::
 
-    from openfaas import Client, TokenAuth, ServiceAccountTokenSource
+    from openfaas_sdk import Client, TokenAuth, ServiceAccountTokenSource
 
     auth = TokenAuth(
         token_url="https://gateway.example.com/oauth/token",
@@ -25,15 +25,15 @@ Quickstart — IAM auth (Kubernetes workload)::
         functions = client.get_functions("openfaas-fn")
 """
 
-from openfaas._version import __version__
-from openfaas.auth import (
+from openfaas_sdk._version import __version__
+from openfaas_sdk.auth import (
     BasicAuth,
     ClientCredentialsTokenSource,
     ServiceAccountTokenSource,
     TokenAuth,
     TokenSource,
 )
-from openfaas.builder import (
+from openfaas_sdk.builder import (
     BUILD_FAILED,
     BUILD_IN_PROGRESS,
     BUILD_SUCCESS,
@@ -44,8 +44,8 @@ from openfaas.builder import (
     create_build_context,
     make_tar,
 )
-from openfaas.client import Client
-from openfaas.exceptions import (
+from openfaas_sdk.client import Client
+from openfaas_sdk.exceptions import (
     APIConnectionError,
     APIStatusError,
     ForbiddenError,
@@ -54,8 +54,8 @@ from openfaas.exceptions import (
     UnauthorizedError,
     UnexpectedStatusError,
 )
-from openfaas.exchange import exchange_id_token
-from openfaas.models import (
+from openfaas_sdk.exchange import exchange_id_token
+from openfaas_sdk.models import (
     FunctionDeployment,
     FunctionNamespace,
     FunctionResources,
@@ -67,8 +67,8 @@ from openfaas.models import (
     SystemInfo,
     VersionInfo,
 )
-from openfaas.token import OAuthError, Token
-from openfaas.token_cache import MemoryTokenCache, TokenCache
+from openfaas_sdk.token import OAuthError, Token
+from openfaas_sdk.token_cache import MemoryTokenCache, TokenCache
 
 __all__ = [
     # Version

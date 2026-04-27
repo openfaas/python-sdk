@@ -22,13 +22,13 @@ The official Python SDK for [OpenFaaS](https://www.openfaas.com).
 ## Installation
 
 ```bash
-pip install openfaas-sdk
+pip install git+https://github.com/openfaas/python-sdk.git
 ```
 
 ## Quick start
 
 ```python
-from openfaas import Client, BasicAuth
+from openfaas_sdk import Client, BasicAuth
 
 client = Client(
     gateway_url="https://gateway.example.com",
@@ -45,7 +45,7 @@ client.close()
 Use the client as a context manager to ensure connections are closed:
 
 ```python
-from openfaas import Client, BasicAuth
+from openfaas_sdk import Client, BasicAuth
 
 with Client("https://gateway.example.com", auth=BasicAuth("admin", "secret")) as client:
     functions = client.get_functions("openfaas-fn")
@@ -56,7 +56,7 @@ with Client("https://gateway.example.com", auth=BasicAuth("admin", "secret")) as
 ### Basic auth
 
 ```python
-from openfaas import BasicAuth
+from openfaas_sdk import BasicAuth
 
 auth = BasicAuth(username="admin", password="secret")
 ```
@@ -64,7 +64,7 @@ auth = BasicAuth(username="admin", password="secret")
 The password can be read from a file:
 
 ```python
-from openfaas import BasicAuth
+from openfaas_sdk import BasicAuth
 
 with open("/var/secrets/basic-auth-password") as f:
     password = f.read().strip()
@@ -93,7 +93,7 @@ class MyTokenAuth(requests.auth.AuthBase):
 When running inside a Kubernetes cluster with [OpenFaaS IAM](https://docs.openfaas.com/openfaas-pro/iam/overview/) enabled, use `TokenAuth` with `ServiceAccountTokenSource` to exchange the pod's projected service account token for an OpenFaaS gateway JWT automatically:
 
 ```python
-from openfaas import Client, TokenAuth, ServiceAccountTokenSource
+from openfaas_sdk import Client, TokenAuth, ServiceAccountTokenSource
 
 auth = TokenAuth(
     token_url="https://gateway.example.com/oauth/token",
@@ -115,7 +115,7 @@ with Client("https://gateway.example.com", auth=auth) as client:
 For workloads outside Kubernetes, use `ClientCredentialsTokenSource` to obtain tokens from an external IdP and exchange them for an OpenFaaS gateway JWT:
 
 ```python
-from openfaas import Client, TokenAuth, ClientCredentialsTokenSource
+from openfaas_sdk import Client, TokenAuth, ClientCredentialsTokenSource
 
 ts = ClientCredentialsTokenSource(
     client_id="my-app",
@@ -187,7 +187,7 @@ fn = client.get_function("env", "openfaas-fn")
 # fn.name, fn.replicas, fn.available_replicas, fn.invocation_count
 
 # Deploy a new function
-from openfaas import FunctionDeployment, FunctionResources
+from openfaas_sdk import FunctionDeployment, FunctionResources
 
 spec = FunctionDeployment(
     service="env",
@@ -219,7 +219,7 @@ namespaces = client.get_namespaces()  # ["openfaas-fn", "staging"]
 ns = client.get_namespace("openfaas-fn")
 
 # Create a namespace
-from openfaas import FunctionNamespace
+from openfaas_sdk import FunctionNamespace
 
 client.create_namespace(FunctionNamespace(name="staging", labels={"team": "backend"}))
 
@@ -233,7 +233,7 @@ client.delete_namespace("staging")
 ### Secrets
 
 ```python
-from openfaas import Secret
+from openfaas_sdk import Secret
 
 # List secrets
 secrets = client.get_secrets("openfaas-fn")
@@ -321,7 +321,7 @@ requires the client to be configured with a `TokenAuth` (or any
 `function_token_source`):
 
 ```python
-from openfaas import Client, TokenAuth, ServiceAccountTokenSource
+from openfaas_sdk import Client, TokenAuth, ServiceAccountTokenSource
 
 auth = TokenAuth(
     token_url="https://gateway.example.com/oauth/token",
@@ -336,7 +336,7 @@ with Client("https://gateway.example.com", auth=auth) as client:
 ## Error handling
 
 ```python
-from openfaas import Client, BasicAuth
+from openfaas_sdk import Client, BasicAuth
 from openfaas.exceptions import NotFoundError, UnauthorizedError, ForbiddenError, APIConnectionError
 
 with Client("https://gateway.example.com", auth=BasicAuth("admin", "secret")) as client:
@@ -377,7 +377,7 @@ Pass a pre-configured `requests.Session` to customise proxies, SSL, or other tra
 
 ```python
 import requests
-from openfaas import Client
+from openfaas_sdk import Client
 
 session = requests.Session()
 session.verify = "/path/to/ca-bundle.pem"

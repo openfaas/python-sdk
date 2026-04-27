@@ -11,8 +11,8 @@ from collections.abc import Iterator
 
 import requests
 
-from openfaas._transport import build_session
-from openfaas.builder.models import BuildResult
+from openfaas_sdk._transport import build_session
+from openfaas_sdk.builder.models import BuildResult
 
 
 class FunctionBuilder:
@@ -32,7 +32,7 @@ class FunctionBuilder:
 
     Example::
 
-        from openfaas.builder import FunctionBuilder, BuildConfig, make_tar
+        from openfaas_sdk.builder import FunctionBuilder, BuildConfig, make_tar
 
         config = BuildConfig(image="ttl.sh/hello-world:1h")
         make_tar("/tmp/req.tar", "./build/hello-world", config)
